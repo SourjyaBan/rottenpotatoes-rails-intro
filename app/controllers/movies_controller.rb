@@ -15,18 +15,25 @@ class MoviesController < ApplicationController
     release_date = params[:release_date]
     ratings = params[:ratings]
     @all_ratings = Movie.all_ratings
-    @checked_ratings = @all_ratings
     if title
       @movies = Movie.order(:title)
-      @sort = "title"
+      session[:sort] = "title"
     elsif release_date
       @movies = Movie.order(:release_date)
-      @sort = "release_date"
-    elsif ratings
-      @movies = Movie.where(:rating => ratings.keys).order(@sort)
+      session[:sort] = "release_date"
+    elsif session[:sort] != nil
+      @movies = Movie.order(session[:sort])
+    end
+    if ratings
+      @movies = Movie.where(:rating => ratings.keys).order(session[:sort])
       @checked_ratings = ratings.keys
+      session[:checked_ratings] = @checked_ratings
+    elsif session[:checked_ratings] != nil
+      @movies = Movie.where(:rating => session[:checked_ratings]).order(session[:sort])
     else
       @movies = Movie.all
+      @checked_ratings = @all_ratings
+      session[:checked_ratings] = @checked_ratings
     end
   end
 
