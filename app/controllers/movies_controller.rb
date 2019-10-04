@@ -11,29 +11,50 @@ class MoviesController < ApplicationController
   end
 
   def index
-    title = params[:title]
-    release_date = params[:release_date]
-    ratings = params[:ratings]
-    @all_ratings = Movie.all_ratings
+    title = params[:title] #Flag set if title is sorted
+    release_date = params[:release_date] #Flag set if release_date is sorted
+    ratings = params[:ratings] #Contains the ratings that are checked
+    @all_ratings = Movie.all_ratings #Contains all ratings
+    redirect_flag = false #Flag set if redirect required
+    #We first check if sorting is required
     if title
-      @movies = Movie.order(:title)
-      session[:sort] = "title"
+      @movies = Movie.order("title") #sort by title
+      session[:sort] = "title" #store sort criteria in session
     elsif release_date
-      @movies = Movie.order(:release_date)
-      session[:sort] = "release_date"
-    elsif session[:sort] != nil
-      @movies = Movie.order(session[:sort])
+      @movies = Movie.order("release_date") #sort by release_date
+      session[:sort] = "release_date" #store sort criteria in session
+    elsif session[:sort] != nil #We have navigated back but sort param not passed
+      @movies = Movie.order(session[:sort]) #Sort by stored sort criteria
+      redirect_flag = true #Set redirection to true
     end
+    #We check if ratings have been passed 
     if ratings
-      @movies = Movie.where(:rating => ratings.keys).order(session[:sort])
-      @checked_ratings = ratings.keys
-      session[:checked_ratings] = @checked_ratings
+      if ratings.kind_of?(Array) #This is when redirection occurs or page initializes
+        @movies = Movie.where(:rating => ratings).order(session[:sort]) #Get selected ratings and sort by criteria
+        @checked_ratings = ratings
+      else # This occurs when the form is submitted
+        @movies = Movie.where(:rating => ratings.keys).order(session[:sort])
+        @checked_ratings = ratings.keys
+      end
+      session[:checked_ratings] = @checked_ratings #Store checked ratings in session
     elsif session[:checked_ratings] != nil
       @movies = Movie.where(:rating => session[:checked_ratings]).order(session[:sort])
-    else
-      @movies = Movie.all
-      @checked_ratings = @all_ratings
-      session[:checked_ratings] = @checked_ratings
+      redirect_flag = true
+    # else
+    #   @movies = Movie.all
+    #   @checked_ratings = @all_ratings
+    #   session[:checked_ratings] = @checked_ratings
+    #   redirect_flag = true
+    end
+    #We check if redirection is needed
+    if redirect_flag
+      if session[:checked_ratings] != nil and session[:sort] == "title"
+        redirect_to movies_path(:title => 1, :ratings => session[:checked_ratings])
+      elsif session[:checked_ratings] != nil and session[:sort] == "release_date"
+        redirect_to movies_path(:release_date => 1, :ratings => session[:checked_ratings])
+      elsif session[:checked_ratings] != nil
+        redirect_to  movies_path(:ratings => session[:checked_ratings])
+      end
     end
   end
 
