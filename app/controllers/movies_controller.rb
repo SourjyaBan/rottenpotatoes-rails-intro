@@ -40,11 +40,11 @@ class MoviesController < ApplicationController
     elsif session[:checked_ratings] != nil
       @movies = Movie.where(:rating => session[:checked_ratings]).order(session[:sort])
       redirect_flag = true
-    # else
-    #   @movies = Movie.all
-    #   @checked_ratings = @all_ratings
-    #   session[:checked_ratings] = @checked_ratings
-    #   redirect_flag = true
+    else
+      @movies = Movie.all
+      @checked_ratings = @all_ratings
+      session[:checked_ratings] = @checked_ratings
+      redirect_flag = true
     end
     #We check if redirection is needed
     if redirect_flag
